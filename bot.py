@@ -16,7 +16,7 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# --- View για το Κλείσιμο του Ticket ---
+# View για το Κλείσιμο του Ticket (Αυστηρός έλεγχος μόνο για Staff / Admin)
 class CloseTicketView(View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -26,18 +26,21 @@ class CloseTicketView(View):
         guild = interaction.guild
         staff_role = guild.get_role(STAFF_ROLE_ID)
         
-        # Έλεγχος αν ο χρήστης που πατάει το κουμπί είναι Staff ή Admin
-        is_staff = staff_role and staff_role in interaction.user.roles
+        # Έλεγχος αν ο χρήστης είναι Admin ή έχει τον Staff ρόλο
         is_admin = interaction.user.guild_permissions.administrator
+        is_staff = staff_role and staff_role in interaction.user.roles
 
-        if is_staff or is_admin or interaction.user.guild_permissions.manage_channels:
-            await interaction.response.send_message("🔒 Το ticket κλείνει και το κανάλι θα διαγραφεί σε λίγα δευτερόλεπτα...", ephemeral=True)
-            await asyncio.sleep(3)
-            await interaction.channel.delete()
-        else:
+        # Αν ΔΕN είναι ούτε Admin ούτε Staff, απορρίπτεται η ενέργεια
+        if not (is_admin or is_staff):
             await interaction.response.send_message("❌ Μόνο η ομάδα Staff μπορεί να κλείσει αυτό το ticket.", ephemeral=True)
+            return
 
-# --- Dropdown Menu με τις 4 Επιλογές ---
+        # Αν είναι Staff ή Admin, προχωράει κανονικά η διαδικασία διαγραφής
+        await interaction.response.send_message("🔒 Το ticket κλείνει και το κανάλι θα διαγραφεί σε λίγα δευτερόλεπτα...", ephemeral=True)
+        await asyncio.sleep(3)
+        await interaction.channel.delete()
+
+# Dropdown Menu με τις 4 Επιλογές 
 class TicketSelect(Select):
     def __init__(self):
         options = [
@@ -99,7 +102,7 @@ class TicketSelectView(View):
         super().__init__(timeout=None)
         self.add_item(TicketSelect())
 
-# --- Κουμπί "Create Ticket" ---
+# Κουμπί "Create Ticket" 
 class InitialTicketView(View):
     def __init__(self):
         super().__init__(timeout=None)
@@ -113,14 +116,14 @@ class InitialTicketView(View):
         )
         await interaction.response.send_message(embed=embed_options, view=TicketSelectView(), ephemeral=True)
 
-# --- Συμβάν όταν το Bot είναι Online ---
+# Συμβάν όταν το Bot είναι Online
 @bot.event
 async def on_ready():
     print(f'✅ Έγινε σύνδεση ως {bot.user.name} (Eclipse Roleplay Bot)')
     bot.add_view(InitialTicketView())
     bot.add_view(CloseTicketView()) # Διατηρεί το κουμπί κλεισίματος ενεργό
 
-# --- Εντολή για αποστολή του Embed Panel στο κανάλι ---
+# Εντολή για αποστολή του Embed Panel στο κανάλι 
 @bot.command()
 @commands.has_permissions(administrator=True)
 async def setup_ticket(ctx):
