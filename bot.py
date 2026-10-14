@@ -1,11 +1,12 @@
 import discord
 from discord.ext import commands
 from discord.ui import View, Select, Button
+import asyncio
 
 # ΡΥΘΜΙΣΕΙΣ (Συμπλήρωσε τα δικά σου στοιχεία) 
-TOKEN = "MTU1OTk0NTQxOTc1NTIzMzM0MA.GaEBO2.iZDYKPHTfZf-4ehXrIPrBEvc85aqXXDsEbP2TU"
-CATEGORY_ID = 1310237114310463583 # Το ID της κατηγορίας όπου θα ανοίγουν τα Tickets
-STAFF_ROLE_ID = 1310237113018744928  # Το ID του Role των Staff που θα βλέπουν τα tickets
+TOKEN = "MTU1OTk0NTQxOTc1NTIzMzM0MA.Gxj5le.7yJur4c3XXbn1Ms8GkoIu_knl9Lm79D0VKyrzA"
+CATEGORY_ID = 1310237114310463583 # Το ID της κατηγορίας όπου θα ανοίγουν τα Tickets (ως αριθμός)
+STAFF_ROLE_ID = 1310237113018744928  # Το ID του Role των Staff που θα βλέπουν τα tickets (ως αριθμός)
 
 intents = discord.Intents.default()
 intents.messages = True
@@ -15,7 +16,28 @@ intents.members = True
 
 bot = commands.Bot(command_prefix="!", intents=intents)
 
-# Dropdown Menu με τις 4 Επιλογές 
+# --- View για το Κλείσιμο του Ticket ---
+class CloseTicketView(View):
+    def __init__(self):
+        super().__init__(timeout=None)
+
+    @discord.ui.button(label="Close Ticket", style=discord.ButtonStyle.secondary, custom_id="close_ticket_btn", emoji="🔒")
+    async def close_button(self, interaction: discord.Interaction, button: Button):
+        guild = interaction.guild
+        staff_role = guild.get_role(STAFF_ROLE_ID)
+        
+        # Έλεγχος αν ο χρήστης που πατάει το κουμπί είναι Staff ή Admin
+        is_staff = staff_role and staff_role in interaction.user.roles
+        is_admin = interaction.user.guild_permissions.administrator
+
+        if is_staff or is_admin or interaction.user.guild_permissions.manage_channels:
+            await interaction.response.send_message("🔒 Το ticket κλείνει και το κανάλι θα διαγραφεί σε λίγα δευτερόλεπτα...", ephemeral=True)
+            await asyncio.sleep(3)
+            await interaction.channel.delete()
+        else:
+            await interaction.response.send_message("❌ Μόνο η ομάδα Staff μπορεί να κλείσει αυτό το ticket.", ephemeral=True)
+
+# --- Dropdown Menu με τις 4 Επιλογές ---
 class TicketSelect(Select):
     def __init__(self):
         options = [
@@ -33,7 +55,7 @@ class TicketSelect(Select):
         guild = interaction.guild
         user = interaction.user
 
-        # Έλεγχος αν υπάρχει η κατηγορία
+        # Έλεγχος αν υπάρχει η κατηγορία και ο ρόλος
         category = guild.get_channel(CATEGORY_ID)
         staff_role = guild.get_role(STAFF_ROLE_ID)
 
@@ -43,7 +65,7 @@ class TicketSelect(Select):
             user: discord.PermissionOverwrite(read_messages=True, send_messages=True),
         }
         if staff_role:
-            overwrites[staff_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True)
+            overwrites[staff_role] = discord.PermissionOverwrite(read_messages=True, send_messages=True, manage_channels=True)
 
         # Δημιουργία του καναλιού ticket
         channel_name = f"ticket-{user.name}".lower()
@@ -53,13 +75,18 @@ class TicketSelect(Select):
             overwrites=overwrites
         )
 
-        # Μήνυμα μέσα στο νέο κανάλι του ticket
+        # Μήνυμα μέσα στο νέο κανάλι του ticket μαζί με το κουμπί κλεισίματος
         embed_ticket = discord.Embed(
             title=f"Eclipse Roleplay - Support Ticket",
-            description=f"Γεια σου {user.mention}!\n\n**Κατηγορία:** `{selected_option}`\n\nΠαρακαλώ γράψε εδώ αναλυτικά την ερώτηση ή το πρόβλημα που αντιμετωπίζεις και ένα μέλος της ομάδας μας θα σου απαντήσει το συντομότερο δυνατό.",
+            description=f"Γεια σου {user.mention}!\n\n**Κατηγορία:** `{selected_option}`\n\nΠαρακαλώ γράψε εδώ αναλυτικά την ερώτηση ή το πρόβλημα που αντιμετωπίζεις και ένα μέλος της ομάδας μας θα σου απαντήσει το συντομότερο δυνατό.\n\n*Τα μέλη του Staff μπορούν να κλείσουν το ticket πατώντας το κουμπί παρακάτω.*",
             color=discord.Color.red()
         )
-        await ticket_channel.send(content=f"{user.mention} {staff_role.mention if staff_role else ''}", embed=embed_ticket)
+        
+        await ticket_channel.send(
+            content=f"{user.mention} {staff_role.mention if staff_role else ''}", 
+            embed=embed_ticket,
+            view=CloseTicketView()
+        )
 
         # Επιβεβαιωτικό μήνυμα στον χρήστη (ορατό μόνο σε αυτόν)
         await interaction.followup.send(
@@ -79,7 +106,6 @@ class InitialTicketView(View):
 
     @discord.ui.button(label="Ticket", style=discord.ButtonStyle.danger, custom_id="open_ticket_btn", emoji="📩")
     async def ticket_button(self, interaction: discord.Interaction, button: Button):
-        # Όταν πατάει το κουμπί, του εμφανίζει το Dropdown Menu
         embed_options = discord.Embed(
             title="Eclipse Roleplay - Επιλογή Κατηγορίας",
             description="Παρακαλώ επίλεξε την κατηγορία που ταιριάζει στο αίτημά σου από το παρακάτω μενού:",
@@ -90,8 +116,9 @@ class InitialTicketView(View):
 # --- Συμβάν όταν το Bot είναι Online ---
 @bot.event
 async def on_ready():
-    print(f'Έγινε σύνδεση ως {bot.user.name} (Eclipse Roleplay Bot)')
-    bot.add_view(InitialTicketView()) # Διατηρεί τα κουμπιά λειτουργικά ακόμα κι αν κάνει restart το bot
+    print(f'✅ Έγινε σύνδεση ως {bot.user.name} (Eclipse Roleplay Bot)')
+    bot.add_view(InitialTicketView())
+    bot.add_view(CloseTicketView()) # Διατηρεί το κουμπί κλεισίματος ενεργό
 
 # --- Εντολή για αποστολή του Embed Panel στο κανάλι ---
 @bot.command()
@@ -111,4 +138,5 @@ async def setup_ticket(ctx):
     
     await ctx.send(embed=embed, view=InitialTicketView())
 
-    bot.run("MTU1OTk0NTQxOTc1NTIzMzM0MA.GaEBO2.iZDYKPHTfZf-4ehXrIPrBEvc85aqXXDsEbP2TU")
+# --- Εκκίνηση του Bot ---
+bot.run("MTU1OTk0NTQxOTc1NTIzMzM0MA.Gxj5le.7yJur4c3XXbn1Ms8GkoIu_knl9Lm79D0VKyrzA")
