@@ -1,1 +1,1 @@
-A simple bot for opening and close ticekts custom made by me.
+A simple bot for opening and close tickets custom made by me.
