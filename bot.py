@@ -4,16 +4,16 @@ from discord.ui import View, Select, Button
 import asyncio
 
 # ΡΥΘΜΙΣΕΙΣ (Συμπλήρωσε τα δικά σου ID για κάθε κατηγορία) 
-TOKEN = "MTU1OTk0NTQxOTc1NTIzMzM0MA.GPukDf.ootctQau19phTP9C1No01VMweKF3X1Z-s6tgiA" # Το token του bot
-STAFF_ROLE_ID = 1310237113018744928  # Το ID του Role των Staff που θα βλέπουν τα tickets
+TOKEN = "" # Το token του bot
+STAFF_ROLE_ID =  # Το ID του Role των Staff που θα βλέπουν τα tickets
 
 # --- ID ΚΑΤΗΓΟΡΙΩΝ ΓΙΑ ΚΑΘΕ ΤΥΠΟ TICKET ---
-RP_CATEGORY_ID = 1559987303886360888        # Βάλε εδώ το ID για τα RP Issue
-CONNECTION_CATEGORY_ID = 1559988210992685107 # Βάλε εδώ το ID για τα Connection Issue
-SUPPORT_CATEGORY_ID = 1559987674683678810   # Βάλε εδώ το ID για τα Support Issue
-QUESTION_CATEGORY_ID = 1559990477262950571 # Βάλε εδώ το ID για τα Question
-DONATION_CATEGORY_ID = 1559986906643566683 # Βάλε εδώ το ID για τα Donation support
-BUG_CATEGORY_ID = 1559991546651344936       # Βάλε εδώ το ID για τα Bug report
+RP_CATEGORY_ID =        # Βάλε εδώ το ID για τα RP Issue
+CONNECTION_CATEGORY_ID =  # Βάλε εδώ το ID για τα Connection Issue
+SUPPORT_CATEGORY_ID =    # Βάλε εδώ το ID για τα Support Issue
+QUESTION_CATEGORY_ID =  # Βάλε εδώ το ID για τα Question
+DONATION_CATEGORY_ID =  # Βάλε εδώ το ID για τα Donation support
+BUG_CATEGORY_ID =        # Βάλε εδώ το ID για τα Bug report
 
 intents = discord.Intents.default()
 intents.messages = True
