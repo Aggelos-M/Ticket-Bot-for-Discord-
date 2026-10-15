@@ -1,4 +1,4 @@
-# Eclipse Roleplay - Discord Ticket Bot 🎟️
+Discord Ticket Bot 🎟️
 
 Ένα πλήρως λειτουργικό Discord Bot γραμμένο σε Python (`discord.py`) για τη διαχείριση tickets, ειδικά σχεδιασμένο για servers (όπως RedM / Roleplay).
 
