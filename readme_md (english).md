@@ -1,4 +1,4 @@
-# Eclipse Roleplay - Discord Ticket Bot 🎟️
+# Discord Ticket Bot 🎟️
 
 A fully functional Discord Bot written in Python (`discord.py`) for ticket management, specifically designed for servers such as RedM / Roleplay.
 
